@@ -1,5 +1,6 @@
 var debug = false;
 var setting,cache, api;
+var updateManifestUrl = "";
 
 function getDefaultSettings() {
     return {
@@ -130,9 +131,9 @@ async function checkUpdate(forceOpen=0){
 
         initUpdateBtn();
         if(localStorage.getItem("updateNotify")=="1" && forceOpen==0) return false;
+        if(typeof(updateManifestUrl) !== "string" || updateManifestUrl.trim() == "") return false;
 
-        let url = "https://www.owly.sk/apps/CodeTimer/update/manifest.json";
-        let manifest = await Neutralino.updater.checkForUpdates(url);
+        let manifest = await Neutralino.updater.checkForUpdates(updateManifestUrl);
 
         if(manifest.version != NL_APPVERSION) {
 
