@@ -66,6 +66,15 @@ Generates `dist/CodeTimer-release.zip` containing all platform binaries
 neu build --release
 ```
 
+### Build Debian package:
+Build the Linux binaries first, then create a `.deb` package for the target architecture:
+```bash
+neu build
+./package-deb.sh x64
+```
+
+Supported architectures are `x64`, `arm64`, and `armhf`. The package is written to `dist/deb/`. You can override the maintainer field with `DEB_MAINTAINER="Your Name <you@example.com>" ./package-deb.sh x64`.
+
 
 <!-- Matomo Image Tracker-->
 <img referrerpolicy="no-referrer-when-downgrade" src="https://analytics.owly.sk/matomo.php?idsite=5&amp;rec=1" style="border:0" alt="" />
