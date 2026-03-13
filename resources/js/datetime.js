@@ -39,3 +39,30 @@ function formatDuration(totalSec){
     ret = `${hours}:${minutes}:${seconds}`;
     return ret;
 }
+
+function getRoundingMinutes() {
+    if(typeof(setting) === "undefined" || typeof(setting.rounding_minutes) === "undefined") return 0;
+
+    var roundingMinutes = parseInt(setting.rounding_minutes, 10);
+    if(isNaN(roundingMinutes) || roundingMinutes < 0) return 0;
+
+    return roundingMinutes;
+}
+
+function roundMomentToInterval(dateTime, roundingMinutes) {
+    if(!roundingMinutes || roundingMinutes <= 0) return dateTime.clone();
+
+    var roundedDateTime = dateTime.clone();
+    var totalSeconds = (roundedDateTime.hours() * 3600) + (roundedDateTime.minutes() * 60) + roundedDateTime.seconds();
+    var intervalSeconds = roundingMinutes * 60;
+    var roundedTotalSeconds = Math.round(totalSeconds / intervalSeconds) * intervalSeconds;
+    var secondsInDay = 24 * 60 * 60;
+
+    roundedDateTime.startOf('day').add(roundedTotalSeconds % secondsInDay, 'seconds');
+
+    if(roundedTotalSeconds >= secondsInDay) {
+        roundedDateTime.add(Math.floor(roundedTotalSeconds / secondsInDay), 'days');
+    }
+
+    return roundedDateTime;
+}

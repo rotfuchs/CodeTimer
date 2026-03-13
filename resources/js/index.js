@@ -52,7 +52,10 @@ async function renderActive(item){
 async function stopItem(){
     if(activeItemId > 0)
     {
-        await api.makeAPICallAsync("patch","/api/timesheets/"+activeItemId+"/stop")
+        var roundedEnd = roundMomentToInterval(moment(), getRoundingMinutes()).format();
+        await api.makeAPICallAsync("patch","/api/timesheets/"+activeItemId, {
+            end: roundedEnd
+        })
         renderInactive();
         clearInterval(timerDuration);
         await loadItems()

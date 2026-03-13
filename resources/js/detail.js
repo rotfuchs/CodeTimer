@@ -196,12 +196,18 @@ function saveItem(){
     {
         data = {};    
         var dateString = $('#date').val()+' '+$('#time_from').val();
-        data.begin = moment(dateString, "DD.MM.YYYY HH:mm:ss").format()
+        data.begin = roundMomentToInterval(
+            moment(dateString, "DD.MM.YYYY HH:mm:ss"),
+            getRoundingMinutes()
+        ).format()
 
         if($('#time_to').val()!="")
         {
             var dateString = $('#date').val()+' '+$('#time_to').val();
-            data.end = moment(dateString, "DD.MM.YYYY HH:mm:ss").format()
+            data.end = roundMomentToInterval(
+                moment(dateString, "DD.MM.YYYY HH:mm:ss"),
+                getRoundingMinutes()
+            ).format()
         }
 
 

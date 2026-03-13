@@ -1,6 +1,18 @@
 var debug = false;
 var setting,cache, api;
 
+function getDefaultSettings() {
+    return {
+        host: "",
+        username: "",
+        token: "",
+        min_tray: 0,
+        always_top: 0,
+        use_only_token: 0,
+        rounding_minutes: 0,
+    };
+}
+
 Neutralino.init();
 
 Neutralino.events.on("windowClose", onWindowClose);
@@ -64,8 +76,19 @@ Neutralino.events.on("createTimesheet", (evt) => {
 */
 
 async function loadSettings(){
-    settingJSON = await Neutralino.storage.getData('setting');
-    setting = JSON.parse(settingJSON)
+    let settingJSON = "{}";
+
+    try {
+        settingJSON = await Neutralino.storage.getData('setting');
+    }
+    catch(error) {
+        if(debug) console.log('loadSettings fallback', error);
+    }
+
+    setting = {
+        ...getDefaultSettings(),
+        ...JSON.parse(settingJSON)
+    };
     return setting;
 }
 

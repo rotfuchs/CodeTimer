@@ -72,6 +72,19 @@
                         <label for="token">API Token</label>
                     </div>
                 </div>
+                <div class="col-12 mb-2">
+                    <div class="form-floating">
+                        <select class="form-select" id="rounding_minutes" aria-label="Round working times">
+                            <option value="0">No rounding</option>
+                            <option value="5">5 minutes</option>
+                            <option value="10">10 minutes</option>
+                            <option value="15">15 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="60">60 minutes</option>
+                        </select>
+                        <label for="rounding_minutes">Round start and stop times</label>
+                    </div>
+                </div>
                 <br/><br/><br/><br/>
                 <div class="col-12 col-md-12 mb-2">
                     <input type="hidden" name="use_only_token" value="0" />

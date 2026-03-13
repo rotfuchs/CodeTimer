@@ -29,6 +29,7 @@ function renderSettings(){
         $('#host').val(setting.host);
         $('#username').val(setting.username);
         $('#token').val(setting.token);
+        $('#rounding_minutes').val(String(setting.rounding_minutes || 0));
 
         if(typeof(setting.min_tray)!=="undefined")
         {
@@ -61,6 +62,8 @@ async function saveSetting(){
     var host = $('#host').val();
     var username = $('#username').val();
     var token = $('#token').val();
+    var rounding_minutes = parseInt($('#rounding_minutes').val(), 10);
+    if(isNaN(rounding_minutes) || rounding_minutes < 0) rounding_minutes = 0;
 
     var min_tray = 0;
     if($('#min_tray').prop('checked')) min_tray=1;
@@ -78,6 +81,7 @@ async function saveSetting(){
         host: host,
         username: username,
         token: token,
+        rounding_minutes: rounding_minutes,
         min_tray: min_tray,
         always_top: always_top,
         use_only_token: use_only_token,
@@ -88,6 +92,7 @@ async function saveSetting(){
         setting.host = host;
         setting.username = username;
         setting.token = token;
+        setting.rounding_minutes = rounding_minutes;
         setting.min_tray = min_tray;
         setting.always_top = always_top;
         setting.use_only_token = use_only_token;
