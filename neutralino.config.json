@@ -44,24 +44,17 @@
     },
     "browser": {
       "globalVariables": {},
-      "nativeBlockList": [
-        "filesystem.*bitte machen"
-      ]
+      "nativeBlockList": ["filesystem.*"]
     },
     "cloud": {
       "url": "/resources/#cloud",
-      "nativeAllowList": [
-        "app.*"
-      ]
+      "nativeAllowList": ["app.*"]
     },
     "chrome": {
       "width": 800,
       "height": 600,
       "args": "--user-agent=\"Neutralinojs chrome mode\"",
-      "nativeBlockList": [
-        "filesystem.*",
-        "os.*"
-      ]
+      "nativeBlockList": ["filesystem.*", "os.*"]
     }
   },
   "cli": {
@@ -79,11 +72,7 @@
   ],
   "buildScript": {
     "mac": {
-      "architecture": [
-        "x64",
-        "arm64",
-        "universal"
-      ],
+      "architecture": ["x64", "arm64", "universal"],
       "minimumOS": "10.13.0",
       "appName": "CodeTimer",
       "appBundleName": "CodeTimer",
