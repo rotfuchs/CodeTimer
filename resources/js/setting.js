@@ -87,7 +87,7 @@ async function saveSetting(){
         use_only_token: use_only_token,
     });
 
-    await Neutralino.storage.setData('setting', data )
+    await CodeTimerStorage.setSetting(data)
     .then(function(status){
         setting.host = host;
         setting.username = username;

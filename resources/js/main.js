@@ -1,6 +1,7 @@
 var debug = false;
 var setting,cache, api;
 var updateManifestUrl = "";
+var trayAvailable = false;
 
 function getDefaultSettings() {
     return {
@@ -28,12 +29,54 @@ let tray = {
       {id: "quit", text: "Quit"}
     ]
   };
-Neutralino.os.setTray(tray);
+
+async function getTrayIconPath(){
+    const bundledIconPath = '/resources/icons/logo.png';
+    const installedIconPath = '/usr/share/icons/hicolor/200x200/apps/codetimer.png';
+
+    try {
+        if(isManagedPackageInstall()) {
+            await Neutralino.filesystem.getStats(installedIconPath);
+            return installedIconPath;
+        }
+    }
+    catch(error) {
+        if(debug) console.log('installed tray icon unavailable', error);
+    }
+
+    try {
+        const cachePath = await Neutralino.os.getPath('cache');
+        const iconDir = cachePath + '/codetimer';
+        const iconPath = iconDir + '/codetimer-tray.png';
+
+        await Neutralino.filesystem.createDirectory(iconDir);
+        await Neutralino.resources.extractFile(bundledIconPath, iconPath);
+        return iconPath;
+    }
+    catch(error) {
+        if(debug) console.log('tray icon extraction failed', error);
+        return bundledIconPath;
+    }
+}
+
+async function initTray(){
+    try {
+        tray.icon = await getTrayIconPath();
+        await Neutralino.os.setTray(tray);
+        trayAvailable = true;
+    }
+    catch(error) {
+        trayAvailable = false;
+        if(debug) console.log('tray init failed', error);
+    }
+}
+
+initTray();
 
 
 function onWindowClose() {
 
-    if(typeof(setting)!=="undefined" && typeof(setting.min_tray)!=="undefined" && setting.min_tray==1)
+    if(typeof(setting)!=="undefined" && typeof(setting.min_tray)!=="undefined" && setting.min_tray==1 && trayAvailable)
     {
         if(debug) console.log('minimize to tray',setting)
         Neutralino.window.hide();
@@ -80,7 +123,7 @@ async function loadSettings(){
     let settingJSON = "{}";
 
     try {
-        settingJSON = await Neutralino.storage.getData('setting');
+        settingJSON = await CodeTimerStorage.getSetting();
     }
     catch(error) {
         if(debug) console.log('loadSettings fallback', error);
@@ -125,6 +168,11 @@ function openDetail(){
     });
 }
 
+function isManagedPackageInstall(){
+    const paths = [window.NL_PATH, window.NL_CWD];
+    return paths.some((path) => typeof(path) === "string" && path.indexOf("/opt/codetimer") === 0);
+}
+
 async function checkUpdate(forceOpen=0){
     
     try {
@@ -133,6 +181,7 @@ async function checkUpdate(forceOpen=0){
         if(localStorage.getItem("updateNotify")=="1" && forceOpen==0) return false;
         if(typeof(updateManifestUrl) !== "string" || updateManifestUrl.trim() == "") return false;
 
+        const managedPackageInstall = isManagedPackageInstall();
         let manifest = await Neutralino.updater.checkForUpdates(updateManifestUrl);
 
         if(manifest.version != NL_APPVERSION) {
@@ -141,13 +190,15 @@ async function checkUpdate(forceOpen=0){
                             `New version of CodeTimer is available!
 
 You are using ${NL_APPVERSION} and new version is ${manifest.version}.
-Do you want to install update now?`,
-                            'YES_NO', 'QUESTION');
+${managedPackageInstall ? "Please install the latest Debian package to update this installation." : "Do you want to install update now?"}`,
+                            managedPackageInstall ? 'OK' : 'YES_NO',
+                            managedPackageInstall ? 'INFO' : 'QUESTION');
 
             
             localStorage.setItem("updateNotify", "1");
             initUpdateBtn();
 
+            if(managedPackageInstall) return false;
 
             if(button == 'YES') {
 

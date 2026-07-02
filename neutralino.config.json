@@ -45,7 +45,7 @@
     "browser": {
       "globalVariables": {},
       "nativeBlockList": [
-        "filesystem.*"
+        "filesystem.*bitte machen"
       ]
     },
     "cloud": {

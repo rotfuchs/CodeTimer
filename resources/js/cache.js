@@ -1,12 +1,12 @@
 async function loadCache(){
-    dataJSON = await Neutralino.storage.getData('cache');
+    dataJSON = await CodeTimerStorage.getCache();
     cache = JSON.parse(dataJSON)
     return cache;
 }
 
 async function saveCache(data){
     if(debug) console.log('saving cache');
-    await Neutralino.storage.setData('cache', JSON.stringify(data))
+    await CodeTimerStorage.setCache(JSON.stringify(data))
     .then(function(status){
     })
     .catch(function(error){
