@@ -56,7 +56,7 @@ CONTROL_DIR="$PKG_ROOT/DEBIAN"
 DESKTOP_DIR="$PKG_ROOT/usr/share/applications"
 PNG_ICON_DIR="$PKG_ROOT/usr/share/icons/hicolor/200x200/apps"
 SVG_ICON_DIR="$PKG_ROOT/usr/share/icons/hicolor/scalable/apps"
-BIN_LINK_DIR="$PKG_ROOT/usr/bin"Punkt 2 jetzt bitte auch
+BIN_LINK_DIR="$PKG_ROOT/usr/bin"
 DOC_DIR="$PKG_ROOT/usr/share/doc/$PACKAGE_NAME"
 OUTPUT_DEB="$ROOT_DIR/dist/deb/${PACKAGE_NAME}_${VERSION}_${PACKAGE_ARCH}.deb"
 MAINTAINER="${DEB_MAINTAINER:-CodeTimer Maintainer <maintainer@example.com>}"
@@ -107,6 +107,7 @@ cp "$SVG_ICON_SOURCE" "$SVG_ICON_DIR/${PACKAGE_NAME}.svg"
 cp "$README_SOURCE" "$DOC_DIR/README.md"
 cp "$LICENSE_SOURCE" "$DOC_DIR/copyright"
 chmod 755 "$INSTALL_DIR/$APP_NAME"
+chmod 644 "$INSTALL_DIR/resources.neu"
 chmod 644 "$PNG_ICON_DIR/${PACKAGE_NAME}.png" "$SVG_ICON_DIR/${PACKAGE_NAME}.svg"
 chmod 644 "$DOC_DIR/README.md" "$DOC_DIR/copyright"
 
@@ -154,6 +155,9 @@ EOF
 chmod 644 "$DESKTOP_DIR/${PACKAGE_NAME}.desktop"
 
 ln -sf "/opt/$PACKAGE_NAME/$APP_NAME" "$BIN_LINK_DIR/$PACKAGE_NAME"
+
+find "$PKG_ROOT" -type d -exec chmod 0755 {} +
+find "$PKG_ROOT" -type d -exec chmod g-s {} +
 
 dpkg-deb --root-owner-group --build "$PKG_ROOT" "$OUTPUT_DEB"
 echo "Created: $OUTPUT_DEB"

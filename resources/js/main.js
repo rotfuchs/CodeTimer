@@ -2,6 +2,7 @@ var debug = false;
 var setting,cache, api;
 var updateManifestUrl = "";
 var trayAvailable = false;
+var isQuitting = false;
 
 function getDefaultSettings() {
     return {
@@ -9,6 +10,7 @@ function getDefaultSettings() {
         username: "",
         token: "",
         min_tray: 0,
+        start_minimized: 0,
         always_top: 0,
         use_only_token: 0,
         rounding_minutes: 0,
@@ -71,10 +73,24 @@ async function initTray(){
     }
 }
 
-initTray();
+function quitApp() {
+    if(isQuitting) return;
 
+    isQuitting = true;
+
+    Neutralino.app.exit(0).catch(function(error) {
+        if(debug) console.log('app exit failed', error);
+        Neutralino.app.killProcess().catch(function(killError) {
+            if(debug) console.log('app kill failed', killError);
+        });
+    });
+}
 
 function onWindowClose() {
+
+    if(isQuitting) {
+        return;
+    }
 
     if(typeof(setting)!=="undefined" && typeof(setting.min_tray)!=="undefined" && setting.min_tray==1 && trayAvailable)
     {
@@ -85,7 +101,7 @@ function onWindowClose() {
     else
     {
         if(debug) console.log('exit app',setting)
-        Neutralino.app.exit();
+        quitApp();
     }
     
 }
@@ -103,7 +119,7 @@ function onTrayMenuItemClicked(event) {
             
             break;
         case "quit":
-            Neutralino.app.exit();
+            quitApp();
             break;
     }
 }
@@ -138,13 +154,31 @@ async function loadSettings(){
 
 async function init(){
     setting = await loadSettings();
+    await initTray();
     await initCache()
 
     
     if(setting.always_top==1) Neutralino.window.setAlwaysOnTop(true);
     else Neutralino.window.setAlwaysOnTop(false);
 
+    if(shouldStartMinimized()) {
+        if(debug) console.log('start minimized to tray', setting);
+        Neutralino.window.hide();
+    }
+
     if(debug) console.log('inited',setting,cache)
+}
+
+function shouldStartMinimized(){
+    const startupCheckedKey = "codetimerStartMinimizedChecked";
+    if(sessionStorage.getItem(startupCheckedKey)=="1") return false;
+    sessionStorage.setItem(startupCheckedKey, "1");
+
+    if(!trayAvailable) return false;
+    if(typeof(setting)==="undefined" || setting.start_minimized!=1) return false;
+
+    const path = window.location.pathname;
+    return path === "/" || path.endsWith("/index.html");
 }
 
 function openHomepage(){

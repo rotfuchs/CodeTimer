@@ -36,6 +36,11 @@ function renderSettings(){
             if(setting.min_tray==1) $('#min_tray').prop('checked',true);
             else $('#min_tray').prop('checked',false);
         } 
+        if(typeof(setting.start_minimized)!=="undefined")
+        {
+            if(setting.start_minimized==1) $('#start_minimized').prop('checked',true);
+            else $('#start_minimized').prop('checked',false);
+        } 
         if(typeof(setting.always_top)!=="undefined")
         {
             if(setting.always_top==1) $('#always_top').prop('checked',true);
@@ -68,6 +73,9 @@ async function saveSetting(){
     var min_tray = 0;
     if($('#min_tray').prop('checked')) min_tray=1;
 
+    var start_minimized = 0;
+    if($('#start_minimized').prop('checked')) start_minimized=1;
+
     var always_top = 0;
     if($('#always_top').prop('checked')) always_top=1;
 
@@ -83,6 +91,7 @@ async function saveSetting(){
         token: token,
         rounding_minutes: rounding_minutes,
         min_tray: min_tray,
+        start_minimized: start_minimized,
         always_top: always_top,
         use_only_token: use_only_token,
     });
@@ -94,6 +103,7 @@ async function saveSetting(){
         setting.token = token;
         setting.rounding_minutes = rounding_minutes;
         setting.min_tray = min_tray;
+        setting.start_minimized = start_minimized;
         setting.always_top = always_top;
         setting.use_only_token = use_only_token;
         refreshCache();
