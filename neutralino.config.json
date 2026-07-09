@@ -1,11 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
   "applicationId": "dev.voss.CodeTimer",
-  "version": "1.0.15.3",
+  "version": "1.0.15.5.4",
   "defaultMode": "window",
   "port": 0,
   "documentRoot": "/resources/",
   "url": "/",
+  "dataLocation": "system",
   "applicationIcon": "resources/icons/appicon.png",
   "enableServer": true,
   "enableNativeAPI": true,

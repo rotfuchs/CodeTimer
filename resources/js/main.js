@@ -32,46 +32,14 @@ let tray = {
     ]
   };
 
-async function getTrayIconPath(){
-    const bundledIconPath = '/resources/icons/logo.png';
-    const installedIconPath = '/usr/share/icons/hicolor/200x200/apps/codetimer.png';
-
-    try {
-        if(isManagedPackageInstall()) {
-            await Neutralino.filesystem.getStats(installedIconPath);
-            return installedIconPath;
-        }
-    }
-    catch(error) {
-        if(debug) console.log('installed tray icon unavailable', error);
-    }
-
-    try {
-        const cachePath = await Neutralino.os.getPath('cache');
-        const iconDir = cachePath + '/codetimer';
-        const iconPath = iconDir + '/codetimer-tray.png';
-
-        await Neutralino.filesystem.createDirectory(iconDir);
-        await Neutralino.resources.extractFile(bundledIconPath, iconPath);
-        return iconPath;
-    }
-    catch(error) {
-        if(debug) console.log('tray icon extraction failed', error);
-        return bundledIconPath;
-    }
-}
-
-async function initTray(){
-    try {
-        tray.icon = await getTrayIconPath();
-        await Neutralino.os.setTray(tray);
+Neutralino.os.setTray(tray)
+    .then(function() {
         trayAvailable = true;
-    }
-    catch(error) {
+    })
+    .catch(function(error) {
         trayAvailable = false;
         if(debug) console.log('tray init failed', error);
-    }
-}
+    });
 
 function quitApp() {
     if(isQuitting) return;
@@ -92,11 +60,15 @@ function onWindowClose() {
         return;
     }
 
-    if(typeof(setting)!=="undefined" && typeof(setting.min_tray)!=="undefined" && setting.min_tray==1 && trayAvailable)
+    const canMinimizeToTray = typeof(setting)!=="undefined"
+        && typeof(setting.min_tray)!=="undefined"
+        && setting.min_tray==1
+        && trayAvailable;
+
+    if(canMinimizeToTray)
     {
         if(debug) console.log('minimize to tray',setting)
         Neutralino.window.hide();
-        //Neutralino.window.minimize();
     }
     else
     {
@@ -154,7 +126,6 @@ async function loadSettings(){
 
 async function init(){
     setting = await loadSettings();
-    await initTray();
     await initCache()
 
     

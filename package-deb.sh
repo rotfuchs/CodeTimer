@@ -41,6 +41,7 @@ map_architecture() {
 
 require_command dpkg-deb
 require_command gzip
+require_command convert
 
 APP_NAME="$(json_value "binaryName")"
 VERSION="$(json_value "version")"
@@ -48,18 +49,18 @@ PACKAGE_ARCH="$(map_architecture "$ARCH_INPUT")"
 BIN_NAME="$APP_NAME-linux_$ARCH_INPUT"
 BIN_SOURCE="$DIST_DIR/$BIN_NAME"
 RESOURCES_SOURCE="$DIST_DIR/resources.neu"
-ICON_SOURCE="$ROOT_DIR/resources/icons/appicon.png"
+ICON_SOURCE="$ROOT_DIR/resources/icons/full.png"
 SVG_ICON_SOURCE="$ROOT_DIR/resources/icons/codetimer_icon.svg"
 PKG_ROOT="$ROOT_DIR/dist/deb/${PACKAGE_NAME}_${VERSION}_${PACKAGE_ARCH}"
 INSTALL_DIR="$PKG_ROOT/opt/$PACKAGE_NAME"
 CONTROL_DIR="$PKG_ROOT/DEBIAN"
 DESKTOP_DIR="$PKG_ROOT/usr/share/applications"
-PNG_ICON_DIR="$PKG_ROOT/usr/share/icons/hicolor/200x200/apps"
 SVG_ICON_DIR="$PKG_ROOT/usr/share/icons/hicolor/scalable/apps"
 BIN_LINK_DIR="$PKG_ROOT/usr/bin"
 DOC_DIR="$PKG_ROOT/usr/share/doc/$PACKAGE_NAME"
 OUTPUT_DEB="$ROOT_DIR/dist/deb/${PACKAGE_NAME}_${VERSION}_${PACKAGE_ARCH}.deb"
 MAINTAINER="${DEB_MAINTAINER:-CodeTimer Maintainer <maintainer@example.com>}"
+PNG_ICON_SIZES=(16 24 32 48 64 128 256 512)
 
 if [[ ! -f "$BIN_SOURCE" ]]; then
     echo "Missing binary: $BIN_SOURCE" >&2
@@ -94,22 +95,48 @@ if [[ ! -f "$SVG_ICON_SOURCE" ]]; then
 fi
 
 rm -rf "$PKG_ROOT"
-mkdir -p "$CONTROL_DIR" "$INSTALL_DIR" "$DESKTOP_DIR" "$PNG_ICON_DIR" "$SVG_ICON_DIR" "$BIN_LINK_DIR" "$DOC_DIR"
-chmod 0755 "$CONTROL_DIR" "$INSTALL_DIR" "$DESKTOP_DIR" "$PNG_ICON_DIR" "$SVG_ICON_DIR" "$BIN_LINK_DIR" "$DOC_DIR"
-chmod g-s "$CONTROL_DIR" "$INSTALL_DIR" "$DESKTOP_DIR" "$PNG_ICON_DIR" "$SVG_ICON_DIR" "$BIN_LINK_DIR" "$DOC_DIR"
+mkdir -p "$CONTROL_DIR" "$INSTALL_DIR" "$DESKTOP_DIR" "$SVG_ICON_DIR" "$BIN_LINK_DIR" "$DOC_DIR"
+for size in "${PNG_ICON_SIZES[@]}"; do
+    mkdir -p "$PKG_ROOT/usr/share/icons/hicolor/${size}x${size}/apps"
+done
+chmod 0755 "$CONTROL_DIR" "$INSTALL_DIR" "$DESKTOP_DIR" "$SVG_ICON_DIR" "$BIN_LINK_DIR" "$DOC_DIR"
+chmod g-s "$CONTROL_DIR" "$INSTALL_DIR" "$DESKTOP_DIR" "$SVG_ICON_DIR" "$BIN_LINK_DIR" "$DOC_DIR"
 find "$PKG_ROOT/usr/share/icons" -type d -exec chmod 0755 {} +
 find "$PKG_ROOT/usr/share/icons" -type d -exec chmod g-s {} +
 
 cp "$BIN_SOURCE" "$INSTALL_DIR/$APP_NAME"
 cp "$RESOURCES_SOURCE" "$INSTALL_DIR/resources.neu"
-cp "$ICON_SOURCE" "$PNG_ICON_DIR/${PACKAGE_NAME}.png"
+for size in "${PNG_ICON_SIZES[@]}"; do
+    convert "$ICON_SOURCE" -resize "${size}x${size}" "$PKG_ROOT/usr/share/icons/hicolor/${size}x${size}/apps/${PACKAGE_NAME}.png"
+done
 cp "$SVG_ICON_SOURCE" "$SVG_ICON_DIR/${PACKAGE_NAME}.svg"
 cp "$README_SOURCE" "$DOC_DIR/README.md"
 cp "$LICENSE_SOURCE" "$DOC_DIR/copyright"
 chmod 755 "$INSTALL_DIR/$APP_NAME"
 chmod 644 "$INSTALL_DIR/resources.neu"
-chmod 644 "$PNG_ICON_DIR/${PACKAGE_NAME}.png" "$SVG_ICON_DIR/${PACKAGE_NAME}.svg"
+find "$PKG_ROOT/usr/share/icons/hicolor" -type f -name "${PACKAGE_NAME}.png" -exec chmod 644 {} +
+chmod 644 "$SVG_ICON_DIR/${PACKAGE_NAME}.svg"
 chmod 644 "$DOC_DIR/README.md" "$DOC_DIR/copyright"
+
+cat > "$CONTROL_DIR/postinst" <<'EOF'
+#!/usr/bin/env bash
+set -e
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+fi
+exit 0
+EOF
+chmod 755 "$CONTROL_DIR/postinst"
+
+cat > "$CONTROL_DIR/postrm" <<'EOF'
+#!/usr/bin/env bash
+set -e
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+fi
+exit 0
+EOF
+chmod 755 "$CONTROL_DIR/postrm"
 
 if [[ -n "${SOURCE_DATE_EPOCH:-}" ]]; then
     BUILD_DATE="$(date -u -R -d "@$SOURCE_DATE_EPOCH")"
@@ -143,7 +170,7 @@ cat > "$DESKTOP_DIR/${PACKAGE_NAME}.desktop" <<EOF
 [Desktop Entry]
 Name=$APP_NAME
 Comment=Desktop timer widget for Kimai time tracking
-Exec=/opt/$PACKAGE_NAME/$APP_NAME
+Exec=$PACKAGE_NAME
 Icon=$PACKAGE_NAME
 Type=Application
 Categories=Office;ProjectManagement;
@@ -154,7 +181,12 @@ Terminal=false
 EOF
 chmod 644 "$DESKTOP_DIR/${PACKAGE_NAME}.desktop"
 
-ln -sf "/opt/$PACKAGE_NAME/$APP_NAME" "$BIN_LINK_DIR/$PACKAGE_NAME"
+cat > "$BIN_LINK_DIR/$PACKAGE_NAME" <<EOF
+#!/usr/bin/env bash
+cd /opt/$PACKAGE_NAME
+exec ./CodeTimer "\$@"
+EOF
+chmod 755 "$BIN_LINK_DIR/$PACKAGE_NAME"
 
 find "$PKG_ROOT" -type d -exec chmod 0755 {} +
 find "$PKG_ROOT" -type d -exec chmod g-s {} +
